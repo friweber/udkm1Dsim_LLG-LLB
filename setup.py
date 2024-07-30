@@ -35,5 +35,10 @@ setup(
     long_description=open('README.md').read(),
     long_description_content_type='text/markdown',
     python_requires='>=3.9',
-    keywords='ultrafast dynamics condensed matter 1D',
+    keywords='ultrafast dynamics condensed matter 1D '
+            + 'NTM 3TM 2TM TTM N-temperature model '
+            + 'coherent acoustic phonons sound strain waves '
+            + 'resonant magnetic scattering diffraction spectroscopy '
+            + 'x-ray magnetic circular dichroism '
+            + 'Landau Lifschitz Bloch ',
 )
