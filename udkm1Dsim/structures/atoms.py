@@ -97,9 +97,9 @@ class Atom:
         self.symbol = symbol
         self.id = kwargs.get('id', symbol)
         self.ionicity = kwargs.get('ionicity', 0)
-        self.mag_amplitude = kwargs.get('mag_amplitude', 0)
-        self.mag_phi = kwargs.get('mag_phi', 0*u.deg)
-        self.mag_gamma = kwargs.get('mag_gamma', 0*u.deg)
+        self.mag_amplitude = kwargs.get('mag_amplitude', 0.0)
+        self.mag_phi = kwargs.get('mag_phi', 0.0*u.deg)
+        self.mag_gamma = kwargs.get('mag_gamma', 0.0*u.deg)
 
         try:
             filename = os.path.join(os.path.dirname(__file__),
@@ -405,7 +405,7 @@ class AtomMixed(Atom):
         self.ionicity = 0
         self.atomic_number_z = 0
         self.mass_number_a = 0
-        self.mass = 0
+        self.mass = 0.0
         self.atoms = []
         self.num_atoms = 0
         self.atomic_form_factor_coeff = self.read_atomic_form_factor_coeff(

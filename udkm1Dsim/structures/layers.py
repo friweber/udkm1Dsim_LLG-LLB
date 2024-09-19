@@ -113,18 +113,18 @@ class Layer:
         self.id = id
         self.name = name
         self.num_sub_systems = 1
-        self.roughness = kwargs.get('roughness', 0*u.nm)
+        self.roughness = kwargs.get('roughness', 0.0*u.nm)
         self.spring_const = np.array([0.0])
-        self.deb_wal_fac = kwargs.get('deb_wal_fac', 0*u.m**2)
-        self.sound_vel = kwargs.get('sound_vel', 0*u.m/u.s)
-        self.phonon_damping = kwargs.get('phonon_damping', 0*u.kg/u.s)
-        self.opt_pen_depth = kwargs.get('opt_pen_depth', 0*u.nm)
-        self.opt_ref_index = kwargs.get('opt_ref_index', 0)
-        self.opt_ref_index_per_strain = kwargs.get('opt_ref_index_per_strain', 0)
-        self.heat_capacity = kwargs.get('heat_capacity', 0)
-        self.therm_cond = kwargs.get('therm_cond', 0)
-        self.lin_therm_exp = kwargs.get('lin_therm_exp', 0)
-        self.sub_system_coupling = kwargs.get('sub_system_coupling', 0)
+        self.deb_wal_fac = kwargs.get('deb_wal_fac', 0.0*u.m**2)
+        self.sound_vel = kwargs.get('sound_vel', 0.0*u.m/u.s)
+        self.phonon_damping = kwargs.get('phonon_damping', 0.0*u.kg/u.s)
+        self.opt_pen_depth = kwargs.get('opt_pen_depth', 0.0*u.nm)
+        self.opt_ref_index = kwargs.get('opt_ref_index', 0.0+0.0j)
+        self.opt_ref_index_per_strain = kwargs.get('opt_ref_index_per_strain', 0.0+0.0j)
+        self.heat_capacity = kwargs.get('heat_capacity', 0.0)
+        self.therm_cond = kwargs.get('therm_cond', 0.0)
+        self.lin_therm_exp = kwargs.get('lin_therm_exp', 0.0)
+        self.sub_system_coupling = kwargs.get('sub_system_coupling', 0.0)
 
         if len(self.heat_capacity) == len(self.therm_cond) \
                 == len(self.lin_therm_exp) == len(self.sub_system_coupling):
@@ -134,14 +134,14 @@ class Layer:
                              'thermal expansion and subsystem coupling have not '
                              'the same number of elements!')
 
-        self.eff_spin = kwargs.get('eff_spin', 0)
+        self.eff_spin = kwargs.get('eff_spin', 0.0)
         self.curie_temp = kwargs.get('curie_temp', 0.0*u.K)
-        self.lamda = kwargs.get('lamda', 0)
-        self.mag_moment = kwargs.get('mag_moment', 0*u.bohr_magneton)
-        self.aniso_exponent = kwargs.get('aniso_exponent', 0)
-        self.anisotropy = kwargs.get('anisotropy', [0, 0, 0]*u.J/u.m**3)
-        self.exch_stiffness = kwargs.get('exch_stiffness', 0*u.J/u.m)
-        self.mag_saturation = kwargs.get('mag_saturation', 0*u.J/u.T/u.m**3)
+        self.lamda = kwargs.get('lamda', 0.0)
+        self.mag_moment = kwargs.get('mag_moment', 0.0*u.bohr_magneton)
+        self.aniso_exponent = kwargs.get('aniso_exponent', 0.0)
+        self.anisotropy = kwargs.get('anisotropy', [0.0, 0.0, 0.0]*u.J/u.m**3)
+        self.exch_stiffness = kwargs.get('exch_stiffness', 0.0*u.J/u.m)
+        self.mag_saturation = kwargs.get('mag_saturation', 0.0*u.J/u.T/u.m**3)
 
     def __str__(self):
         """String representation of this class"""
@@ -690,7 +690,7 @@ class AmorphousLayer(Layer):
     def __init__(self, id, name, thickness, density, **kwargs):
         self.thickness = thickness
         self.density = density
-        self.area = 1*u.angstrom**2  # set as unit area
+        self.area = 1.0*u.angstrom**2  # set as unit area
         self.volume = self.area*self.thickness
         self.mass = self.density*self.volume
         self.mass_unit_area = self.mass
@@ -846,9 +846,9 @@ class UnitCell(Layer):
         self.thickness = c_axis
         self.a_axis = kwargs.get('a_axis', self.c_axis)
         self.b_axis = kwargs.get('b_axis', self.a_axis)
-        self.mass = 0*u.kg
-        self.mass_unit_area = 0*u.kg
-        self.density = 0*u.kg/u.m**2
+        self.mass = 0.0*u.kg
+        self.mass_unit_area = 0.0*u.kg
+        self.density = 0.0*u.kg/u.m**2
 
         super().__init__(id, name, **kwargs)
 
