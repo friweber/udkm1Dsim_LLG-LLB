@@ -146,33 +146,36 @@ class Layer:
     def __str__(self):
         """String representation of this class"""
         output = [
-                  ['area', '{:.4~P}'.format(self.area.to('nm**2'))],
-                  ['volume', '{:.4~P}'.format(self.volume.to('nm**3'))],
-                  ['mass', '{:4~P}'.format(self.mass)],
-                  ['mass per unit area', '{:4~P}'.format(self.mass_unit_area)],
-                  ['density', '{:.4~P}'.format(self.density.to('kg/meter**3'))],
-                  ['roughness', '{:.4~P}'.format(self.roughness.to('nm'))],
-                  ['Debye Waller Factor', self.deb_wal_fac.to('meter**2')],
-                  ['sound velocity', '{:.4~P}'.format(self.sound_vel.to('meter/s'))],
-                  ['spring constant', self.spring_const * u.kg/u.s**2],
-                  ['phonon damping', self.phonon_damping.to('kg/s')],
-                  ['opt. pen. depth', self.opt_pen_depth.to('nm')],
-                  ['opt. refractive index', self.opt_ref_index],
-                  ['opt. ref. index/strain', self.opt_ref_index_per_strain],
+                  ['area', '{:.4f}'.format(self.area.to('nm**2'))],
+                  ['volume', '{:.4f}'.format(self.volume.to('nm**3'))],
+                  ['mass', '{:4f}'.format(self.mass)],
+                  ['mass per unit area', '{:4f}'.format(self.mass_unit_area)],
+                  ['density', '{:.4f}'.format(self.density.to('kg/meter**3'))],
+                  ['roughness', '{:.4f}'.format(self.roughness.to('nm'))],
+                  ['Debye Waller Factor', '{:.4f}'.format(self.deb_wal_fac.to('meter**2'))],
+                  ['sound velocity', '{:.4f}'.format(self.sound_vel.to('meter/s'))],
+                  ['spring constant', '{:.4f}'.format(self.spring_const * u.kg/u.s**2)],
+                  ['phonon damping', '{:.4f}'.format(self.phonon_damping.to('kg/s'))],
+                  ['opt. pen. depth', '{:.4f}'.format(self.opt_pen_depth.to('nm'))],
+                  ['opt. refractive index', '{0.real:.4f} + {0.imag:.4f}i'.format(
+                      self.opt_ref_index)],
+                  ['opt. ref. index/strain', '{0.real:.4f} + {0.imag:.4f}i'.format(
+                      self.opt_ref_index_per_strain)],
                   ['thermal conduct.', ' W/(m K)\n'.join(self.therm_cond_str) + ' W/(m K)'],
                   ['linear thermal expansion', '\n'.join(self.lin_therm_exp_str)],
                   ['heat capacity', ' J/(kg K)\n'.join(self.heat_capacity_str) + ' J/(kg K)'],
                   ['subsystem coupling', ' W/m³\n'.join(self.sub_system_coupling_str) + ' W/m³'],
                   ['effective spin', self.eff_spin],
-                  ['Curie temperature', '{:.4~P}'.format(self.curie_temp.to('K'))],
-                  ['mean-field exch. coupling', self.mf_exch_coupling*u.m**2*u.kg/u.s**2],
+                  ['Curie temperature', '{:.4f}'.format(self.curie_temp.to('K'))],
+                  ['mean-field exch. coupling', '{:.4f}'.format(
+                      self.mf_exch_coupling*u.m**2*u.kg/u.s**2)],
                   ['coupling to bath parameter', self.lamda],
-                  ['atomic magnetic moment', '{:.4~P}'.format(self.mag_moment.to(
+                  ['atomic magnetic moment', '{:.4f}'.format(self.mag_moment.to(
                       'bohr_magneton'))],
                   ['uniaxial anisotropy exponent', self.aniso_exponent],
-                  ['anisotropy', self.anisotropy],
-                  ['exchange stiffness', self.exch_stiffness],
-                  ['saturation magnetization', self.mag_saturation],
+                  ['anisotropy', '{:.4f}'.format(self.anisotropy.to('J/m**3'))],
+                  ['exchange stiffness', '{:.4f}'.format(self.exch_stiffness.to('J/m'))],
+                  ['saturation magnetization', '{:.4f}'.format(self.mag_saturation.to('J/T/m**3'))],
                 ]
 
         return output
@@ -701,7 +704,7 @@ class AmorphousLayer(Layer):
         """String representation of this class"""
         output = [['id', self.id],
                   ['name', self.name],
-                  ['thickness', '{:.4~P}'.format(self.thickness)],
+                  ['thickness', '{:.4f}'.format(self.thickness)],
                   ]
         output += super().__str__()
 
@@ -709,8 +712,8 @@ class AmorphousLayer(Layer):
             output += [['atom', self.atom.name],
                        ['magnetization', ''],
                        ['amplitude', self.magnetization['amplitude']],
-                       ['phi [°]', self.magnetization['phi']],
-                       ['gamma [°]', self.magnetization['gamma']], ]
+                       ['phi [°]', '{:.4f}'.format(self.magnetization['phi'].to('deg'))],
+                       ['gamma [°]', '{:.4f}'.format(self.magnetization['gamma'].to('deg'))], ]
         except AttributeError:
             output += [['no atom set', '']]
 
@@ -862,13 +865,13 @@ class UnitCell(Layer):
         """String representation of this class"""
         output = [['id', self.id],
                   ['name', self.name],
-                  ['a-axis', '{:.4~P}'.format(self.a_axis)],
-                  ['b-axis', '{:.4~P}'.format(self.b_axis)],
-                  ['c-axis', '{:.4~P}'.format(self.c_axis)],
-                  ['area', '{:.4~P}'.format(self.area.to('nm**2'))],
-                  ['volume', '{:.4~P}'.format(self.volume.to('nm**3'))],
-                  ['mass', '{:.4~P}'.format(self.mass)],
-                  ['mass per unit area', '{:.4~P}'.format(self.mass_unit_area)],
+                  ['a-axis', '{:.4f}'.format(self.a_axis.to('nm'))],
+                  ['b-axis', '{:.4f}'.format(self.b_axis.to('nm'))],
+                  ['c-axis', '{:.4f}'.format(self.c_axis.to('nm'))],
+                  ['area', '{:.4f}'.format(self.area.to('nm**2'))],
+                  ['volume', '{:.4f}'.format(self.volume.to('nm**3'))],
+                  ['mass', '{:.4f}'.format(self.mass.to('kg'))],
+                  ['mass per unit area', '{:.4f}'.format(self.mass_unit_area)],
                   ]
         output += super().__str__()
 
@@ -884,8 +887,8 @@ class UnitCell(Layer):
                               self.atoms[i][2],
                               '',
                               self.atoms[i][0].mag_amplitude,
-                              self.atoms[i][0].mag_phi.magnitude,
-                              self.atoms[i][0].mag_gamma.magnitude,
+                              self.atoms[i][0].mag_phi.magnitude.to('deg').magnitude,
+                              self.atoms[i][0].mag_gamma.magnitude.to('deg').magnitude,
                               ])
         class_str += tabulate(atoms_str, headers=['atom', 'position', 'position function',
                                                   'magn.', 'amplitude', 'phi [°]', 'gamma [°]'],
