@@ -888,8 +888,8 @@ class UnitCell(Layer):
                               self.atoms[i][2],
                               '',
                               self.atoms[i][0].mag_amplitude,
-                              self.atoms[i][0].mag_phi.magnitude.to('deg').magnitude,
-                              self.atoms[i][0].mag_gamma.magnitude.to('deg').magnitude,
+                              self.atoms[i][0].mag_phi.to('deg').magnitude,
+                              self.atoms[i][0].mag_gamma.to('deg').magnitude,
                               ])
         class_str += tabulate(atoms_str, headers=['atom', 'position', 'position function',
                                                   'magn.', 'amplitude', 'phi [°]', 'gamma [°]'],
