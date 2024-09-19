@@ -175,7 +175,8 @@ class Layer:
                   ['uniaxial anisotropy exponent', self.aniso_exponent],
                   ['anisotropy', '{:.4f}'.format(self.anisotropy.to('J/m**3'))],
                   ['exchange stiffness', '{:.4f}'.format(self.exch_stiffness.to('J/m'))],
-                  ['saturation magnetization', '{:.4f}'.format(self.mag_saturation.to('J/T/m**3'))],
+                  ['saturation magnetization', '{:.4f}'.format(
+                      self.mag_saturation.to('J/T/m**3'))],
                 ]
 
         return output
