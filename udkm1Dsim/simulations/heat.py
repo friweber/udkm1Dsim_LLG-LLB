@@ -31,7 +31,7 @@ from .. import u, Q_
 from ..helpers import make_hash_md5, finderb, multi_gauss
 import numpy as np
 from scipy.optimize import brentq
-from scipy.interpolate import interp2d
+from scipy.interpolate import RectBivariateSpline
 from scipy.integrate import solve_ivp
 from time import time
 from os import path
@@ -929,8 +929,9 @@ class Heat(Simulation):
             temp_map = np.zeros([len(delays)+1, L, K])
             for iii in range(K):
                 init = np.interp(d_mid, distances, temp[0, :, iii]).reshape([1, L])
-                f = interp2d(distances, excitation_delays, temp[1:, :, iii], kind='linear')
-                temp_map[:, :, iii] = np.append(init, f(d_mid, delays.to('s').magnitude), axis=0)
+                f = RectBivariateSpline(distances, excitation_delays, temp[1:, :, iii].T,
+                                        kx=1, ky=1)
+                temp_map[:, :, iii] = np.append(init, f(d_mid, delays.to('s').magnitude).T, axis=0)
 
         # calculate the difference temperature map
         delta_temp_map = np.diff(temp_map, axis=0)
