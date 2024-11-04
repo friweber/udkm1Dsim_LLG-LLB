@@ -274,7 +274,7 @@ class Layer:
                                            'opt_ref_index_per_strain'],
                                'magnetic': ['_thickness', 'magnetization', 'eff_spin',
                                             '_curie_temp', '_aniso_exponents', '_anisotropy',
-                                            '_exch_stiffness', '_mag_saturation', 'lamda'],
+                                            '_exch_stiffness', '_mag_saturation','magnetoelastic', 'lamda'],
                                }
 
         types = (kwargs.get('types', 'all'))

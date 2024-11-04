@@ -334,7 +334,7 @@ class LLB(Magnetization):
         class_str += super().__str__()
         return class_str
 
-    def calc_magnetization_map(self, delays, temp_map, strain_map, H_ext=np.array([0, 0, 0]), init_mag=[], simulation_type='LLB'):
+    def calc_magnetization_map(self, delays, temp_map, strain_map, H_ext=np.array([0, 0, 0]), init_mag=[]):
         r"""calc_magnetization_map
 
         Calculates the magnetization map using the mean-field quantum
@@ -387,6 +387,7 @@ class LLB(Magnetization):
         Args:
             delays (ndarray[Quantity]): delays range of simulation [s].
             temp_map (ndarray[float]): spatio-temporal temperature map.
+            strain_map (ndarray[float]): spatio-temporal strain map.
             H_ext (ndarray[float], optional): external magnetic field
                 (H_x, H_y, H_z) [T].
 
@@ -416,9 +417,10 @@ class LLB(Magnetization):
         aniso_exponents = self.S.get_layer_property_vector('aniso_exponent')
         anisotropies = self.S.get_layer_property_vector('_anisotropy')
         mag_saturations = self.S.get_layer_property_vector('_mag_saturation')
+        #magnetoelastic_constants = self.S.get_layer_property_vector('magnetoelastic')
         exch_stiffnesses = self.get_directional_exchange_stiffnesses()
+        anisotropies = self.S.get_layer_property_vector('_anisotropy')
         thicknesses = self.S.get_layer_property_vector('_thickness')
-        magnetoelastic_coupling = [0,0,16000]*u.J*u.m**(-3)
         # calculate the mean magnetization maps for each unique layer
         # and all relevant parameters
         mean_mag_map = self.get_mean_field_mag_map(temp_map[:, :, 0])
@@ -435,8 +437,7 @@ class LLB(Magnetization):
             state = None
         # solve pdepe with method-of-lines
 
-        if simulation_type == 'LLB':
-            sol = solve_ivp(
+        sol = solve_ivp(
             LLB.odefunc,
             [delays[0], delays[-1]],
             np.reshape(init_mag[is_magnetic, :], N*3, order='F'),
@@ -455,41 +456,10 @@ class LLB(Magnetization):
                   anisotropies[is_magnetic],
                   mag_saturations[is_magnetic],
                   exch_stiffnesses[is_magnetic],
-                  magnetoelastic_coupling,
                   thicknesses[is_magnetic],
                   pbar, state),
             t_eval=delays,
             **self.ode_options)
-        elif simulation_type == 'LLG':
-           sol = solve_ivp(
-            LLB.odefunc_LLG,
-            [delays[0], delays[-1]],
-            np.reshape(init_mag[is_magnetic, :], N*3, order='F'),
-            args=(delays,
-                  N,
-                  H_ext,
-                  temp_map[:, is_magnetic, 0],  # electron temperature
-                  temp_map[:, is_magnetic, 1], # phonon temperature
-                  strain_map[:, is_magnetic],
-                  mean_mag_map[:, is_magnetic],
-                  curie_temps[is_magnetic],
-                  eff_spins[is_magnetic],
-                  lambdas[is_magnetic],
-                  mf_exch_couplings[is_magnetic],
-                  mag_moments[is_magnetic],
-                  aniso_exponents[is_magnetic],
-                  anisotropies[is_magnetic],
-                  mag_saturations[is_magnetic],
-                  exch_stiffnesses[is_magnetic],
-                  magnetoelastic_coupling,
-                  thicknesses[is_magnetic],
-                  pbar, state),
-            t_eval=delays,
-            **self.ode_options)
-        else:
-            raise ValueError("Invalid simulation_type. Choose 'LLB' or 'LLG'.")
-        
-        
 
         if pbar is not None:  # close tqdm progressbar if used
             pbar.close()
@@ -651,7 +621,7 @@ class LLB(Magnetization):
     def odefunc(t, m,
                 delays, N, H_ext, temp_map, strain_map, mean_mag_map, curie_temps, eff_spins, lambdas,
                 mf_exch_couplings, mag_moments, aniso_exponents, anisotropies, mag_saturations,
-                exch_stiffnesses, magnetoelastic_coupling, thicknesses, pbar, state):
+                exch_stiffnesses, thicknesses, pbar, state):
         """odefunc
 
         Ordinary differential equation that is solved for 1D LLB.
@@ -711,7 +681,7 @@ class LLB(Magnetization):
         # nearest delay index for current time t
         idt = finderb(t, delays)[0]
         temps = temp_map[idt, :].flatten()
-        strains = strain_map[idt, :].flatten()*1e3
+        strains = strain_map[idt, :].flatten()
         # binary masks for layers being under or over its Curie temperature
         under_tc = (temps < curie_temps)
         over_tc = ~under_tc
@@ -724,19 +694,32 @@ class LLB(Magnetization):
 
         # external field H_ext is given as input
         # calculate uniaxial anisotropy field
+        print(last_t)
+        print("Anisotropy Field")
         H_A = LLB.calc_uniaxial_anisotropy_field(m, mf_magnetizations, aniso_exponents,
                                                  anisotropies, mag_saturations)
         # calculate exchange field
+        print("Exchange Field")
         H_ex = LLB.calc_exchange_field(m, exch_stiffnesses, mag_saturations, thicknesses)
         # calculate thermal field
+
+        print("Thermal Field")
         H_th = LLB.calc_thermal_field(m, m_squared, temps, mf_magnetizations, eff_spins,
                                       curie_temps, mf_exch_couplings, mag_moments, under_tc,
                                       over_tc)
-        
-        H_me = LLB.calc_magnetoelastic_field(m, strains, magnetoelastic_coupling, mag_saturations)
+
+        print("ME Field")
+        # calculate magnetoelastic field contribution
+        H_me = LLB.calc_magnetoelastic_field(m, strains, [0., 0., 0.0405], mag_saturations)
 
         # calculate the effective field
         H_eff = H_ext + H_A + H_ex + H_th + H_me
+
+        #print(f"External field: {H_ext}")
+        #print(f"Anisotropy field: {H_A}")
+        #print(f"Exchange field: {H_ex}")
+        #print(f"Thermal field: {H_th}")
+        #print(f"ME field: {H_me}")
 
 
         # calculate components of LLB
@@ -766,178 +749,38 @@ class LLB(Magnetization):
         dmdt = gamma_e * (m_rot + trans_damping - long_damping)
 
         return np.reshape(dmdt, N*3, order='F')
-    
-    @staticmethod
-    def odefunc_LLG(t, m,
-                delays, N, H_ext, temp_map_e, temp_map_p, strain_map, mean_mag_map, curie_temps, eff_spins, lambdas,
-                mf_exch_couplings, mag_moments, aniso_exponents, anisotropies, mag_saturations,
-                exch_stiffnesses, magnetoelastic_coupling, thicknesses, pbar, state):
-        """odefunc
-
-        Ordinary differential equation that is solved for 1D LLB.
-
-        Args:
-            t (ndarray[float]): internal time steps of the ode solver.
-            m (ndarray[float]): internal variable of the ode solver.
-            delays (ndarray[float]): delays range of simulation [s].
-            N (int): number of spatial grid points.
-            H_ext (ndarray[float]): external magnetic field
-                (H_x, H_y, H_z) [T].
-            temp_map (ndarray[float]): spatio-temporal electron temperature map.
-            mean_mag_map (ndarray[float]): spatio-temporal
-                mean-field magnetization map.
-            curie_temps (ndarray[float]): Curie temperatures of layers.
-            eff_spins (ndarray[float]): effective spins of layers.
-            lambdas (ndarray[float]): coupling-to-bath parameter of layers.
-            mf_exch_couplings (ndarray[float]): mean-field exchange couplings of
-                 layers.
-            mag_moments (ndarray[float]): atomic magnetic moments of layers.
-            aniso_exponents (ndarray[float]): exponent of uniaxial anisotropy of
-                layers.
-            anisotropies (ndarray[float]): anisotropy vectors of layers.
-            mag_saturations (ndarray[float]): saturation magnetization of
-                layers.
-            exch_stiffnesses (ndarray[float]): exchange stiffness of layers
-                towards the upper and lower layer.
-            thicknesses (ndarray[float]): thicknesses of layers.
-            pbar (tqdm): tqdm progressbar.
-            state (list[float]): state variables for progress bar.
-
-        Returns:
-            dmdt (ndarray[float]): temporal derivative of internal variable.
-
-        """
-        # state is a list containing last updated time t:
-        # state = [last_t, dt]
-        # I used a list because its values can be carried between function
-        # calls throughout the ODE integration
-        last_t, dt = state
-        try:
-            n = int((t - last_t)/dt)
-        except ValueError:
-            n = 0
-
-        if n >= 1:
-            pbar.update(n)
-            pbar.set_description('Delay = {:.3f} ps'.format(t*1e12))
-            state[0] = t
-        elif n < 0:
-            state[0] = t
-
-        # initialize arrays
-        # reshape input temperature
-        m = np.array(m).reshape([N, 3], order='F')
-
-        # nearest delay index for current time t
-        idt = finderb(t, delays)[0]
-        temps_e = temp_map_e[idt, :].flatten()
-        temps_p = temp_map_p[idt, :].flatten()
-        strains = strain_map[idt, :].flatten()*1e3
-
-        # get the current mean-field magnetization
-        mf_magnetizations = mean_mag_map[idt, :]
-
-        # actual calculations
-        m_squared = np.sum(np.power(m, 2), axis=1)
-        gamma_e = -1.761e11
-
-        
-
-        # external field H_ext is given as input
-        # calculate uniaxial anisotropy field
-        H_A = LLB.calc_uniaxial_anisotropy_field(m, mf_magnetizations, aniso_exponents,
-                                                 anisotropies, mag_saturations)
-        # calculate exchange field
-        H_ex = LLB.calc_exchange_field(m, exch_stiffnesses, mag_saturations, thicknesses)
-        # calculate thermal field
-        
-        H_me = LLB.calc_magnetoelastic_field(m, strains, magnetoelastic_coupling, mag_saturations)
-
-        # calculate the effective field
-        H_eff = H_ext + H_A + H_ex + H_me
-
-
-        # calculate components of LLB
-        # precessional term:
-        m_rot = np.cross(m, H_eff)
-        trans_damping = 0.15*np.cross(m, m_rot)
-        m_mag = np.linalg.norm(m, axis=1)  # Shape: (20,)
-        m_mag = np.clip(m_mag, 0, 1)  # Ensure m_mag is within [0, 1]
-
-        # Reshape for broadcasting
-        m_mag_reshaped = m_mag[:, np.newaxis]
-
-        # Corrected function call with proper argument order
-        dm_dt_norm = LLB.dm_dt_norm(temps_e, temps_p, m_mag_reshaped, 8.0*1e12, 627)
-
-        # Recalculate dmdt
-        dmdt = gamma_e * m_mag_reshaped * (m_rot + trans_damping) + m * dm_dt_norm 
-
-        return np.reshape(dmdt, N*3, order='F')
-    
-    @staticmethod
-    def dm_dt_norm(temps_e, temps_p, m, R, T_C):
-        # Recalculate dm_dt_norm with safeguards
-        tanh_arg = np.clip(m * T_C / temps_e[:, np.newaxis], -100, 100)
-        denominator = np.tanh(tanh_arg)
-        denominator = np.where(denominator == 0, np.finfo(float).eps, denominator)
-        dm_dt_norm = R * m * (temps_p[:, np.newaxis] / T_C) * (1 - m / denominator)
-
-        return dm_dt_norm
 
     @staticmethod
-    def calc_uniaxial_anisotropy_field(mag_map, mf_magnetizations, aniso_exponents, anisotropies,
-                                       mag_saturations):
+    def calc_uniaxial_anisotropy_field(mag_map, mf_magnetizations, aniso_exponents, anisotropies, mag_saturations):
         r"""calc_uniaxial_anisotropy_field
 
         Calculate the uniaxial anisotropy component of the effective field.
 
-        .. math::
-
-            \mathbf{H}_\mathrm{A} = -
-            \frac{2}{M_s}
-            \left(
-                K_x\,m_\mathrm{eq}(T)^{\kappa-2}
-                    \begin{bmatrix}0\\m_y\\m_z\end{bmatrix}
-                + K_y\,m_\mathrm{eq}(T)^{\kappa-2}
-                    \begin{bmatrix}m_x\\0\\m_z\end{bmatrix}
-                + K_z\,m_\mathrm{eq}(T)^{\kappa-2}
-                    \begin{bmatrix}m_x\\m_y\\0\end{bmatrix}
-            \right)
-
-        with :math:`K = (K_x, K_y, K_z)` as the anisotropy and :math:`\kappa` as
-        the uniaxial anisotropy exponent.
-
-        Args:
-            mag_map (ndarray[float]): spatio-temporal magnetization map
-                - possibly for a single delay.
-            mf_magnetizations (ndarray[float]): mean-field magnetization of
-                layers.
-            aniso_exponents (ndarray[float]): exponent of uniaxial
-                anisotropy of layers.
-            anisotropies (ndarray[float]): anisotropy vectors of layers.
-            mag_saturations (ndarray[float]): saturation magnetization of
-                layers.
-
         Returns:
             H_A (ndarray[float]): uniaxial anisotropy field.
-
         """
+
+        # Ensure everything is a numpy array
+        mag_saturations = np.asarray(mag_saturations)
+        anisotropies = np.asarray(anisotropies)
+        mf_magnetizations = np.asarray(mf_magnetizations)
+        aniso_exponents = np.asarray(aniso_exponents)
+
+        # Initialize the anisotropy field
         H_A = np.zeros_like(mag_map)
 
-        factor = -2/mag_saturations
-        unit_vector = np.array([1, 0, 0])[np.newaxis, :]
+        # Calculate the factor
+        factor = -2 / mag_saturations
+
+        # Define the unit vector and loop through dimensions
+        unit_vector = np.array([0, 1, 1])[np.newaxis, :]
+
         for i in range(3):
-            H_A += factor[:, np.newaxis] * anisotropies[:, i, np.newaxis]\
+            H_A += factor[:, np.newaxis] * anisotropies[:, i, np.newaxis] \
                 * np.power(mf_magnetizations, aniso_exponents - 2)[:, np.newaxis] \
-                * mag_map*np.roll(unit_vector, i, axis=1)
+                * mag_map * np.roll(unit_vector, i, axis=1)
 
         return H_A
-
-
-    
-        
-
 
     @staticmethod
     def calc_exchange_field(mag_map, exch_stiffnesses, mag_saturations, thicknesses):
@@ -1055,7 +898,7 @@ class LLB(Magnetization):
         H_me = np.zeros_like(mag_map)
         
         # Magnetoelastic field is proportional to the strain and magnetization along the z-axis
-        H_me[:, 2] = -magnetoelastic_constants[2]/mag_saturations * strains * mag_map[:, 2]
+        H_me[:, 2] = magnetoelastic_constants[2] * strains * mag_map[:, 2]
         
         return H_me
 
