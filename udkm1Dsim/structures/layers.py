@@ -142,7 +142,7 @@ class Layer:
         self.anisotropy = kwargs.get('anisotropy', [0.0, 0.0, 0.0]*u.J/u.m**3)
         self.exch_stiffness = kwargs.get('exch_stiffness', 0.0*u.J/u.m)
         self.mag_saturation = kwargs.get('mag_saturation', 0.0*u.J/u.T/u.m**3)
-        self.magnetoelastic_coupling = kwargs.get('magnetoelastic_coupling', 0.0*u.J/u.T/u.m**3)
+        self.magnetoelastic_coupling = kwargs.get('magnetoelastic_coupling', 0.0*u.J/u.m**3)
 
     def __str__(self):
         """String representation of this class"""
@@ -179,7 +179,7 @@ class Layer:
                   ['saturation magnetization', '{:.4f}'.format(
                       self.mag_saturation.to('J/T/m**3'))],
                     ['magnetoelastic coupling', '{:.4f}'.format(
-                      self.magnetoelastic_coupling.to('J/T/m**3'))],
+                      self.magnetoelastic_coupling.to('J/m**3'))],
                 ]
 
         return output
@@ -617,7 +617,7 @@ class Layer:
 
     @property
     def magnetoelastic_coupling(self):
-        return Q_(self._magnetoelastic_coupling, u.J/u.T/u.m**3)
+        return Q_(self._magnetoelastic_coupling, u.J/u.m**3)
 
     @magnetoelastic_coupling.setter
     def magnetoelastic_coupling(self, magnetoelastic_coupling):
