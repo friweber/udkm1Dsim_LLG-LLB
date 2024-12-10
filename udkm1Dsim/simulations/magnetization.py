@@ -1310,6 +1310,7 @@ class LLG(Magnetization):
         exch_stiffnesses = self.get_directional_exchange_stiffnesses()
         thicknesses = self.S.get_layer_property_vector('_thickness')
         magnetoelastic_coupling = self.S.get_layer_property_vector('_magnetoelastic_coupling')
+        R = self.S.get_layer_property_vector('_R')
         # calculate the mean magnetization maps for each unique layer
         # and all relevant parameters
         # mask for magnetic layers only
@@ -1343,7 +1344,7 @@ class LLG(Magnetization):
                 anisotropies[is_magnetic],
                 mag_saturations[is_magnetic],
                 exch_stiffnesses[is_magnetic],
-                magnetoelastic_coupling[is_magnetic],
+                magnetoelastic_coupling[is_magnetic], R[is_magnetic],
                 thicknesses[is_magnetic],
                 pbar, state),
         t_eval=delays,
@@ -1369,7 +1370,7 @@ class LLG(Magnetization):
     def odefunc(t, m,
                 delays, N, H_ext, temp_map_e, temp_map_p, strain_map, curie_temps, eff_spins, lambdas,
                 mf_exch_couplings, mag_moments, aniso_exponents, anisotropies, mag_saturations,
-                exch_stiffnesses, magnetoelastic_coupling, thicknesses, pbar, state):
+                exch_stiffnesses, magnetoelastic_coupling, R, thicknesses, pbar, state):
         """odefunc
 
         Ordinary differential equation that is solved for 1D LLB.
@@ -1464,7 +1465,7 @@ class LLG(Magnetization):
         
 
         # Demagnetization term
-        dm_dt_norm = LLG.dm_dt_norm(temps_e, temps_p, m_mag_reshaped, 8.0*1e12, 627)
+        dm_dt_norm = LLG.dm_dt_norm(temps_e, temps_p, m_mag_reshaped, R, curie_temps)
 
         # Recalculate dmdt
         dmdt = gamma_e * m_mag_reshaped * (m_rot + trans_damping) + m * dm_dt_norm 
@@ -1473,12 +1474,10 @@ class LLG(Magnetization):
     
     @staticmethod
     def dm_dt_norm(temps_e, temps_p, m, R, T_C):
-        # Recalculate dm_dt_norm with safeguards
-        tanh_arg = np.clip(m * T_C / temps_e[:, np.newaxis], -100, 100)
+        tanh_arg = np.clip(m * (T_C[:, np.newaxis] / temps_e[:, np.newaxis]), -100, 100)
         denominator = np.tanh(tanh_arg)
         denominator = np.where(denominator == 0, np.finfo(float).eps, denominator)
-        dm_dt_norm = R * m * (temps_p[:, np.newaxis] / T_C) * (1 - m / denominator)
-
+        dm_dt_norm = R[:, np.newaxis] * m * (temps_p[:, np.newaxis] / T_C[:, np.newaxis]) * (1 - m / denominator)
         return dm_dt_norm
 
 

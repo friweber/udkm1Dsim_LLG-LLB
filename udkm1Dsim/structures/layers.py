@@ -143,6 +143,7 @@ class Layer:
         self.exch_stiffness = kwargs.get('exch_stiffness', 0.0*u.J/u.m)
         self.mag_saturation = kwargs.get('mag_saturation', 0.0*u.J/u.T/u.m**3)
         self.magnetoelastic_coupling = kwargs.get('magnetoelastic_coupling', 0.0*u.J/u.m**3)
+        self.R = kwargs.get('R', 0.0*u.ps)
 
     def __str__(self):
         """String representation of this class"""
@@ -178,8 +179,10 @@ class Layer:
                   ['exchange stiffness', '{:.4f}'.format(self.exch_stiffness.to('J/m'))],
                   ['saturation magnetization', '{:.4f}'.format(
                       self.mag_saturation.to('J/T/m**3'))],
-                    ['magnetoelastic coupling', '{:.4f}'.format(
+                  ['magnetoelastic coupling', '{:.4f}'.format(
                       self.magnetoelastic_coupling.to('J/m**3'))],
+                  ['R', '{:.4f}'.format(
+                      self.R.to('ps'))],
                 ]
 
         return output
@@ -277,7 +280,7 @@ class Layer:
                                            'opt_ref_index_per_strain'],
                                'magnetic': ['_thickness', 'magnetization', 'eff_spin',
                                             '_curie_temp', '_aniso_exponents', '_anisotropy',
-                                            '_exch_stiffness', '_mag_saturation', "_magnetoelastic_coupling" 'lamda'],
+                                            '_exch_stiffness', '_mag_saturation', "_magnetoelastic_coupling", "_R" 'lamda'],
                                }
 
         types = (kwargs.get('types', 'all'))
@@ -622,6 +625,14 @@ class Layer:
     @magnetoelastic_coupling.setter
     def magnetoelastic_coupling(self, magnetoelastic_coupling):
         self._magnetoelastic_coupling = float(magnetoelastic_coupling.to_base_units().magnitude)
+
+    @property
+    def R(self):
+        return Q_(self._R, u.s)
+
+    @R.setter
+    def R(self, R):
+        self._R = float(R.to_base_units().magnitude)
 
 
 class AmorphousLayer(Layer):
