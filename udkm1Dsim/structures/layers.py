@@ -100,6 +100,7 @@ class Layer:
         curie_temp (float): Curie temperature [K].
         mf_exch_coupling (float): mean field exchange coupling constant [m²kg/s²].
         lamda (float): intrinsic coupling to bath parameter.
+        alpha (float): intrinsic Gilbert Damping
         mag_moment (float): atomic magnetic moment [mu_Bohr].
         aniso_exponent(ndarray[float]): exponent of T-dependence uniaxial
             anisotropy.
@@ -137,6 +138,7 @@ class Layer:
         self.eff_spin = kwargs.get('eff_spin', 0.0)
         self.curie_temp = kwargs.get('curie_temp', 0.0*u.K)
         self.lamda = kwargs.get('lamda', 0.0)
+        self.alpha = kwargs.get('alpha', 0.0)
         self.mag_moment = kwargs.get('mag_moment', 0.0*u.bohr_magneton)
         self.aniso_exponent = kwargs.get('aniso_exponent', 0.0)
         self.anisotropy = kwargs.get('anisotropy', [0.0, 0.0, 0.0]*u.J/u.m**3)
@@ -171,6 +173,7 @@ class Layer:
                   ['Curie temperature', '{:.4f}'.format(self.curie_temp.to('K'))],
                   ['mean-field exch. coupling', '{:.4f}'.format(
                       self.mf_exch_coupling*u.m**2*u.kg/u.s**2)],
+                  ['coupling to bath parameter', self.lamda],
                   ['coupling to bath parameter', self.lamda],
                   ['atomic magnetic moment', '{:.4f}'.format(self.mag_moment.to(
                       'bohr_magneton'))],
@@ -280,7 +283,7 @@ class Layer:
                                            'opt_ref_index_per_strain'],
                                'magnetic': ['_thickness', 'magnetization', 'eff_spin',
                                             '_curie_temp', '_aniso_exponents', '_anisotropy',
-                                            '_exch_stiffness', '_mag_saturation', "_magnetoelastic_coupling", "_R" 'lamda'],
+                                            '_exch_stiffness', '_mag_saturation', "_magnetoelastic_coupling", "_R", "lamda", "_alpha"],
                                }
 
         types = (kwargs.get('types', 'all'))

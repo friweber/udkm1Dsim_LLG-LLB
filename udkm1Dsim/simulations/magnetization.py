@@ -1301,7 +1301,7 @@ class LLG(Magnetization):
         # get layer properties
         curie_temps = self.S.get_layer_property_vector('_curie_temp')
         eff_spins = self.S.get_layer_property_vector('eff_spin')
-        lambdas = self.S.get_layer_property_vector('lamda')
+        alphas = self.S.get_layer_property_vector('alpha')
         mf_exch_couplings = self.S.get_layer_property_vector('mf_exch_coupling')
         mag_moments = self.S.get_layer_property_vector('_mag_moment')
         aniso_exponents = self.S.get_layer_property_vector('aniso_exponent')
@@ -1337,7 +1337,7 @@ class LLG(Magnetization):
                 strain_map[:, is_magnetic],
                 curie_temps[is_magnetic],
                 eff_spins[is_magnetic],
-                lambdas[is_magnetic],
+                alphas[is_magnetic],
                 mf_exch_couplings[is_magnetic],
                 mag_moments[is_magnetic],
                 aniso_exponents[is_magnetic],
@@ -1368,7 +1368,7 @@ class LLG(Magnetization):
     
     @staticmethod
     def odefunc(t, m,
-                delays, N, H_ext, temp_map_e, temp_map_p, strain_map, curie_temps, eff_spins, lambdas,
+                delays, N, H_ext, temp_map_e, temp_map_p, strain_map, curie_temps, eff_spins, alphas,
                 mf_exch_couplings, mag_moments, aniso_exponents, anisotropies, mag_saturations,
                 exch_stiffnesses, magnetoelastic_coupling, R, thicknesses, pbar, state):
         """odefunc
@@ -1461,7 +1461,7 @@ class LLG(Magnetization):
         # calculate components of LLB
         # precessional term:
         m_rot = np.cross(m, H_eff)
-        trans_damping = 0.15*np.cross(m, m_rot)
+        trans_damping = alphas*np.cross(m, m_rot)
         
 
         # Demagnetization term
