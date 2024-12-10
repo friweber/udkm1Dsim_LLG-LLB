@@ -1461,7 +1461,7 @@ class LLG(Magnetization):
         # calculate components of LLB
         # precessional term:
         m_rot = np.cross(m, H_eff)
-        trans_damping = alphas*np.cross(m, m_rot)
+        trans_damping = alphas[:, np.newaxis]*np.cross(m, m_rot)
         
 
         # Demagnetization term
